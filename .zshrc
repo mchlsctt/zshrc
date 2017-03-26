@@ -327,11 +327,10 @@ setprompt () {
     PROMPT='$PR_CYAN$PR_SHIFT_IN$PR_LLCORNER$PR_BLUE$PR_HBAR$PR_SHIFT_OUT(\
 %(1j.$PR_LIGHT_RED%j$PR_BLUE:.)\
 $PR_LIGHT_BLUE$PR_RED%T$PR_BLUE)$PR_SHIFT_IN$PR_HBAR$PR_SHIFT_OUT\
-$PR_CYAN$PR_SHIFT_IN$PR_HBAR$PR_SHIFT_OUT\
-$PR_NO_COLOUR '
+$PR_CYAN$PR_SHIFT_IN$PR_HBAR$PR_SHIFT_OUT$PR_NO_COLOUR '
 
     #This is concatenedt to RPROMPT
-    MYRPROMPT=' $PR_CYAN$PR_SHIFT_IN$PR_HBAR$PR_BLUE$PR_HBAR$PR_SHIFT_OUT\
+    MYRPROMPT='$PR_CYAN$PR_SHIFT_IN$PR_HBAR$PR_BLUE$PR_HBAR$PR_SHIFT_OUT\
 ($PR_YELLOW%D{%a,%b%d}$PR_BLUE)$PR_SHIFT_IN$PR_HBAR$PR_CYAN$PR_LRCORNER$PR_SHIFT_OUT$PR_NO_COLOUR'
 
     PS2='$PR_CYAN$PR_SHIFT_IN$PR_HBAR$PR_SHIFT_OUT\
@@ -343,6 +342,11 @@ $PR_CYAN$PR_SHIFT_IN$PR_HBAR$PR_SHIFT_OUT$PR_NO_COLOUR '
 # Do nothing if we're running vt100
 if [[ "$TERM" != "vt100" ]]; then
     setprompt
+fi
+
+# force TMUX load
+if command -v tmux>/dev/null; then
+    [[ ! $TERM =~ screen ]] && [ -z $TMUX ] && exec tmux
 fi
 
 # Save x lines of CLUI history
