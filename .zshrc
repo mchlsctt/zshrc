@@ -9,14 +9,19 @@
 autoload -U colors zsh/terminfo complist incremental-complete-word compinit promptinit insert-files predict-on
 
 # Path additions
-export PATH=$PATH:/opt/adm/sbin:/opt/msys/3rdParty/bin:/sbin:/usr/sbin
+export PATH=$PATH:/cygdrive/c/DAVE-3.1.10/DAVE-3.1.10/DAVE-3.1.10/ARM-GCC/bin:/cygdrive/c/Program\ Files\ \(x86\)/SEGGER/JLinkARM_V484f
+
+# Some convienient aliases for SEGGER stuff
+alias jlinkgdbserver="JLinkGDBServerCL.exe -device XMC1302-0032 -if SWD -endian little"
+alias jlinkgdb="arm-none-eabi-gdb -ex \"target extended-remote localhost:2331\""
+
+alias winpython="/cygdrive/c/Users/smf0323/Downloads/WinPython-64bit-3.5.2.1Qt5/python-3.5.2.amd64/python.exe"
 
 #LD_LIBRARY_PATH
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/sforster/Code/Core:/home/sforster/Code/Core/modules:/home/sforster/Code/Core/modules/mc:/opt/msys/3rdParty:/home/sforster/Code/Core/modules/mc/src/modules
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 
 # Make grep use colors and set matches to inverse video.
-export GREP_COLOR=7
-export GREP_OPTIONS='--color=auto'
+alias grep="grep --color"
 
 # Maximum size of directory stack before truncation occurs
 export DIRSTACKSIZE=50
@@ -56,7 +61,7 @@ export ZLS_COLORS=$LS_COLORS
 export PAGER=less
 
 # This is basically useless since coreadm is writing cores to /var/core
-limit coredumpsize 0
+#limit coredumpsize 0
 ulimit -c 0
 
 # Add some color to top and make it obvious when the load_avg is high
@@ -99,8 +104,17 @@ alias rm="rm -i"
 # Set less to use color
 alias less="less -r"
 
+# Set df to do nothing
+alias df=""
+
 # Set ag to use color by default
 alias ag="ag --color"
+
+# Set cat to display non prints by default
+alias cat="cat -v"
+
+# Stop the .hex file fuckery
+alias hgdiff="hg diff -X \"glob:**.hex\" -X \"glob:**.elf\" -X \"glob:**.mk\" -X \"glob:**makefile\""
 
 # setenv for csh junkies (including tset)
 setenv() { export $1=$2 }
@@ -112,6 +126,8 @@ bindkey -v
 #add back in some nice bindings
 bindkey '^r' history-incremental-search-backward
 bindkey '^w' backward-kill-word
+bindkey '^a' beginning-of-line
+bindkey '^e' end-of-line
 
 # Color definitions for GNU's ls (ls)
 eval `dircolors -b`
@@ -188,7 +204,18 @@ function precmd {
     # See if we're in a Mercurial branch
     HG_BRANCH=`echo -n : ; hg branch 2> /dev/null`
     if [[ $HG_BRANCH == : ]]; then 
-      unset HG_BRANCH
+        unset HG_BRANCH
+    else
+        HG_SHELVE=`hg shelve --list 2> /dev/null | grep "${HG_BRANCH//:}"`
+        if [[ -z $HG_SHELVE ]]; then 
+            unset HG_SHELVE
+        else 
+            HG_SHELVE=":SHELVE"
+        fi
+    fi
+    GIT_BRANCH=`echo -n : ; git rev-parse --abbrev-ref HEAD 2> /dev/null`
+    if [[ $GIT_BRANCH == : ]]; then 
+      unset GIT_BRANCH
     fi
 
     HG_STATUS=`hg status -mard 2> /dev/null | wc -l`
@@ -197,6 +224,13 @@ function precmd {
     else
       HG_STATUS=$PR_RED
     fi
+    GIT_STATUS=`git status -s 2> /dev/null | wc -l`
+    if [[ $GIT_STATUS == 0 ]]; then
+      GIT_STATUS=$PR_BLUE
+    else
+      GIT_STATUS=$PR_RED
+    fi
+
 
     ###
     # Truncate the path if it's too long.
@@ -204,7 +238,7 @@ function precmd {
     PR_FILLBAR=""
     PR_PWDLEN=""
 
-    local promptsize=${#${(%):---(%n@%m:%l$HG_BRANCH)---()--}}
+    local promptsize=${#${(%):---(%n@%m:%l$HG_BRANCH$GIT_BRANCH$HG_SHELVE)---()--}}
     local pwdsize=${#${(%):-%~}}
 
     if [[ "$promptsize + $pwdsize" -gt $TERMWIDTH ]]; then
@@ -218,6 +252,8 @@ preexec () {
     #if [[ "$TERM" == "screen" ]]; then
     #    local CMD=${1[(wr)^(*=*|sudo|-*)]}
     #fi
+    #export TERM=screen-256color
+    #[ -n "$TMUX" ] && export TERM=screen-256color
 }
 
 setprompt () {
@@ -282,7 +318,7 @@ setprompt () {
 
     PROMPT='$PR_SET_CHARSET$PR_STITLE${(e)PR_TITLEBAR}\
 $PR_CYAN$PR_SHIFT_IN$PR_ULCORNER$PR_BLUE$PR_HBAR$PR_SHIFT_OUT(\
-$PR_GREEN%(!.%SROOT%s.%n)$PR_YELLOW@%m:$PR_WHITE%l$HG_STATUS$HG_BRANCH\
+$PR_GREEN%(!.%SROOT%s.%n)$PR_YELLOW@%m:$PR_WHITE%l$HG_STATUS$HG_BRANCH$PR_RED$HG_SHELVE$PR_BLUE$GIT_STATUS$GIT_BRANCH\
 $PR_BLUE)$PR_SHIFT_IN$PR_HBAR$PR_CYAN$PR_HBAR${(e)PR_FILLBAR}$PR_BLUE$PR_HBAR$PR_SHIFT_OUT(\
 $PR_MAGENTA%$PR_PWDLEN<...<%~%<<\
 $PR_BLUE)$PR_SHIFT_IN$PR_HBAR$PR_CYAN$PR_URCORNER$PR_SHIFT_OUT\
@@ -321,7 +357,3 @@ HISTFILESIZE=0
 # then set HISTFILESIZE to a large value
 HISTFILESIZE=4096  
 HISTSIZE=4096  
-
-# Make grep use colors and set matches to inverse video.
-export GREP_COLOR=7
-export GREP_OPTIONS='--color=auto'
