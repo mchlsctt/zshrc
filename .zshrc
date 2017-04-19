@@ -114,7 +114,7 @@ alias ag="ag --color"
 alias cat="cat -v"
 
 # Stop the .hex file fuckery
-alias hgdiff="hg diff -X \"glob:**.hex\" -X \"glob:**.elf\" -X \"glob:**.mk\" -X \"glob:**makefile\" -X \"glob:.*\""
+alias hgdiff="hg diff -X \"glob:**.hex\" -X \"glob:**.elf\" -X \"glob:**.mk\" -X \"glob:**makefile\" -X \"glob:**.lnt\" -X \"glob:**.tmp\" -X \"glob:**.html\" -X \"glob:.*\""
 
 # setenv for csh junkies (including tset)
 setenv() { export $1=$2 }
@@ -346,7 +346,7 @@ fi
 
 # force TMUX load
 if command -v tmux>/dev/null; then
-    [[ ! $TERM =~ screen ]] && [ -z $TMUX ] && exec tmux
+    [[ ! $TERM =~ screen ]] && [ -z $TMUX ] && exec tmux new-session -A -s main
 fi
 
 # Save x lines of CLUI history
